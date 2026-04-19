@@ -3,10 +3,10 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>الصيدليات المناوبة في الشيخ سعد اسقبولي</title>
+    <title>جدول المناوبات في الشيح سعد اسقبولي</title>
     <script src="https://cdn.sheetjs.com/xlsx-0.20.1/package/dist/xlsx.full.min.js"></script>
     <style>
-        body { font-family: 'Arial', Tahoma, Geneva, Verdana, sans-serif; margin: 20px; background: #fff;}
+        body { font-family: 'Arial', Tahoma, sans-serif; margin: 20px; background: #fff; }
         
         .setup-area { 
             background: #f8f9fa; 
@@ -17,33 +17,19 @@
             text-align: center; 
         }
 
+        .print-header { display: none; }
+
         table { width: 100%; border-collapse: collapse; border: 2.5px solid black; }
-        td, th { border: 1.5px solid black; padding: 8px; text-align: center; vertical-align: middle; font-weight: bold; overflow: hidden; }
-        .time-header-row, .friday-header-row { background-color: #2c3e50 !important; color: #fff !important; font-size: 15px; height: 40px; }
-        .time-header-row td { border: 2px solid black; }
-        .friday-header-row td { border: 2px solid black; }
-
-        .ph-name, .ph-loc { background-color: transparent !important; }
+        td, th { border: 1.5px solid black; padding: 8px; text-align: center; vertical-align: middle; font-weight: bold; }
+        
+        .time-header-row, .friday-header-row { background-color: #fff!important; color: #000 !important; font-size: 15px; height: 40px; }
+        
         .ph-name { width: 150px; font-size: 15px; color: #000; }
-        .ph-loc { font-size: 15px; font-weight:bold; color: #333; font-family: 'Arial' !important;}
+        .ph-loc { font-size: 15px; color: #333; }
 
-        .day-cell, .date-cell { width: 45px !important;height: 20px; background-color: #fff !important; height: auto; padding-right:20px;}
+        .day-cell, .date-cell { width: 45px !important; background-color: #fff !important; }
 
-        [contenteditable="true"]:hover { background-color: rgba(255,255,255,0.5); cursor: edit; }
-        [contenteditable="true"]:focus { outline: 2px solid #fff; background: rgba(255,255,255,0.2); }
-
-        .vertical-text { 
-            writing-mode: vertical-rl; 
-            transform: rotate(180deg); 
-            white-space: nowrap; 
-            font-size: 16px;
-        }
-        .verticaldate-text { 
-            writing-mode: vertical-rl; 
-            white-space: nowrap; 
-            font-size: 16px;
-        }
-
+        .vertical-text { writing-mode: vertical-rl; transform: rotate(180deg); white-space: nowrap; font-size: 16px; }
         .day-sat { background-color: #e3f2fd !important; }
         .day-sun { background-color: #fce4ec !important; }
         .day-mon { background-color: #f1f8e9 !important; }
@@ -53,24 +39,27 @@
         .day-fri { background-color: #fff9c4 !important; }
 
         .actions { text-align: center; margin-top: 20px; }
-        button { 
-            background: #2c3e50; color: #fff; padding: 10px 25px; 
-            border: none; cursor: pointer; font-size: 16px; border-radius: 5px; margin: 5px; 
-        }
+        button { background: #2c3e50; color: #fff; padding: 10px 25px; border: none; cursor: pointer; font-size: 16px; border-radius: 5px; margin: 5px; }
         .btn-excel { background: #27ae60; }
-        .edit-hint { color: #e67e22; font-size: 14px; margin-bottom: 10px; display: block; text-align: center; }
 
-        @media print { .setup-area, .actions, .edit-hint { display: none; } body { margin: 0; } }
         @media print {
-    .page-break {
-        display: block;
-        page-break-after: always;
-        break-after: page;       
-    }
-    tr {
-        page-break-inside: avoid;
-    }
-}
+            .setup-area, .actions { display: none !important; }
+            body { margin: 0; }
+            
+            .print-header { 
+                display: block; 
+                text-align: center; 
+                margin-bottom: 20px; 
+                border: 3px solid #000; 
+                padding: 15px; 
+            }
+            .print-header h1 { margin: 0; font-size: 26px; font-weight: 900; }
+            .print-header h3 { margin: 10px 0 0 0; font-size: 18px; }
+            .page-break { display: block; break-after: page; }
+            tr { page-break-inside: avoid; }
+            @page{margin-top: 0;
+            margin-bottom: 0;}
+        }
     </style>
 </head>
 <body>
@@ -80,6 +69,11 @@
         <label>إلى تاريخ:</label> <input type="date" id="endInput">
         <label>ابدأ بالمجموعة:</label> <input type="number" id="startGroup" value="1" min="1" style="width: 60px;">
         <button onclick="buildTable()">توليد الجدول</button>
+    </div>
+
+    <div id="printOnlyHeader" class="print-header">
+        <h1 id="mainTitle">الصيدليات المناوبة في الشيح سعد-اسقبولي</h1>
+        <h3 id="subTitle"></h3>
     </div>
 
     <table id="scheduleTable">
@@ -95,89 +89,93 @@
         const dayClasses = ["day-sun", "day-mon", "day-tue", "day-wed", "day-thu", "day-fri", "day-sat"];
 
         async function buildTable() {
-    try {
-        const res = await fetch('pharmaciesss.json');
-        const groups = await res.json();
-        
-        const startVal = document.getElementById('startInput').value;
-        const endVal = document.getElementById('endInput').value;
-        let groupCounter = parseInt(document.getElementById('startGroup').value) - 1; 
+            try {
+                const res = await fetch('pharmaciessss.json');
+                const groups = await res.json();
+                
+                const startVal = document.getElementById('startInput').value;
+                const endVal = document.getElementById('endInput').value;
+                let groupCounter = parseInt(document.getElementById('startGroup').value) - 1; 
 
-        const tbody = document.querySelector('#scheduleTable tbody');
-        if (!startVal || !endVal) return alert("يرجى اختيار التواريخ");
+                if (!startVal || !endVal) return alert("يرجى اختيار التواريخ");
 
-        let current = new Date(startVal);
-        const endLimit = new Date(endVal);
-        tbody.innerHTML = "";
-        let needNormalHeader = true;
+                document.getElementById('subTitle').innerText = `للفترة من: ${startVal} إلى: ${endVal}`;
+                document.title = "جدول_المناوبات_" + startVal;
 
-        while (current <= endLimit) {
-            const dayIndex = current.getDay(); 
-            const dayName = current.toLocaleDateString('ar-EG', {weekday: 'long'});
-            const dateStr = `${current.getFullYear()}/${(current.getMonth()+1).toString().padStart(2, '0')}/${current.getDate().toString().padStart(2, '0')}`; 
-            const rowClass = dayClasses[dayIndex];
+                const tbody = document.querySelector('#scheduleTable tbody');
+                let current = new Date(startVal);
+                const endLimit = new Date(endVal);
+                tbody.innerHTML = "";
+                
+                let needNormalHeader = true;
 
-            if (dayIndex !== 5) { 
-                if (needNormalHeader) {
-                    const hRow = tbody.insertRow();
-                    hRow.className = "time-header-row";
-                    hRow.innerHTML = `<td colspan="6" contenteditable="true">من الساعة 8:00 مساء    لغاية الساعة 12:00 ليلا</td>`;
-                    needNormalHeader = false; 
-                }
+                while (current <= endLimit) {
+                    const dayIndex = current.getDay();
+                    const dayName = current.toLocaleDateString('ar-EG', {weekday: 'long'});
+                    const dateStr = `${current.getFullYear()}/${(current.getMonth()+1).toString().padStart(2, '0')}/${current.getDate().toString().padStart(2, '0')}`; 
+                    const rowClass = dayClasses[dayIndex];
 
-                const g = groups[groupCounter % groups.length]; groupCounter++;
-                const phars = g.pharmacies || [];
+                    if (dayIndex !== 5) {
+                        if (needNormalHeader) {
+                            const hRow = tbody.insertRow();
+                            hRow.className = "time-header-row";
+                            hRow.innerHTML = `<td colspan="6" contenteditable="true">من الساعة 8:00 مساء لغاية الساعة 12:00 ليلا</td>`;
+                            needNormalHeader = false;
+                        }
 
-                for (let i = 0; i < 2; i++) {
-                    const row = tbody.insertRow();
-                    row.classList.add(rowClass);
-                    if (i === 0) {
-                        row.innerHTML = `
-                            <td rowspan="2" class="day-cell"><div class="vertical-text">${dayName}</div></td>
-                            <td rowspan="2" class="date-cell"><div class="vertical-text">${dateStr}</div></td>
+                        const g = groups[groupCounter % groups.length]; groupCounter++;
+                        const phars = g.pharmacies || [];
+
+                        for (let i = 0; i < 2; i++) {
+                            const row = tbody.insertRow();
+                            row.classList.add(rowClass);
+                            if (i === 0) {
+                                row.innerHTML = `
+                                    <td rowspan="2" class="day-cell"><div class="vertical-text">${dayName}</div></td>
+                                    <td rowspan="2" class="date-cell"><div class="vertical-text">${dateStr}</div></td>
+                                `;
+                            }
+                            addCell(row, phars[i], "name", 1);
+                            addCell(row, phars[i], "loc", 3); 
+                        }
+                    } else {
+                        needNormalHeader = true;
+                        const hRow = tbody.insertRow();
+                        hRow.className = "friday-header-row";
+                        hRow.innerHTML = `
+                            <td colspan="4" contenteditable="true">من الساعة 8:00 صباحا لغاية الساعة 4:00 مساء</td>
+                            <td colspan="2" contenteditable="true">من الساعة 4:00 مساء لغاية الساعة 12:00 ليلا</td>
                         `;
+
+                        const g1 = groups[groupCounter % groups.length]; groupCounter++;
+                        const g2 = groups[groupCounter % groups.length]; groupCounter++;
+                        const p1 = g1.pharmacies || [];
+                        const p2 = g2.pharmacies || [];
+
+                        for (let i = 0; i < 2; i++) {
+                            const row = tbody.insertRow();
+                            row.classList.add(rowClass);
+                            if (i === 0) {
+                                row.innerHTML = `
+                                    <td rowspan="2" class="day-cell "><div class="vertical-text">الجمعة</div></td>
+                                    <td rowspan="2" class="date-cell"><div class="vertical-text">${dateStr}</div></td>
+                                `;
+                            }
+                            addCell(row, p1[i], "name", 1);
+                            addCell(row, p1[i], "loc", 1);
+                            addCell(row, p2[i], "name", 1);
+                            addCell(row, p2[i], "loc", 1);
+                        }
+
+                        if (current < endLimit) {
+                            const breakRow = tbody.insertRow();
+                            breakRow.className = "page-break";
+                        }
                     }
-                    addCell(row, phars[i], "name", 1);
-                    addCell(row, phars[i], "loc", 3); 
+                    current.setDate(current.getDate() + 1);
                 }
-            } else {
-                needNormalHeader = true;
-
-                const hRow = tbody.insertRow();
-                hRow.className = "friday-header-row";
-                hRow.innerHTML = `
-                    <td colspan="4" contenteditable="true">من الساعة 8:00 صباحا لغاية الساعة 4:00 مساء</td>
-                    <td colspan="2" contenteditable="true">من الساعة 4:00 مساء لغاية الساعة 12:00 ليلا</td>
-                `;
-
-                const g1 = groups[groupCounter % groups.length]; groupCounter++;
-                const g2 = groups[groupCounter % groups.length]; groupCounter++;
-                const p1 = g1.pharmacies || [];
-                const p2 = g2.pharmacies || [];
-
-                for (let i = 0; i < 2; i++) {
-                    const row = tbody.insertRow();
-                    row.classList.add(rowClass);
-                    if (i === 0) {
-                        row.innerHTML = `
-                            <td rowspan="2" class="day-cell"><div class="vertical-text">الجمعة</div></td>
-                            <td rowspan="2" class="date-cell"><div class="vertical-text">${dateStr}</div></td>
-                        `;
-                    }
-                    addCell(row, p1[i], "name", 1);
-                    addCell(row, p1[i], "loc", 1);
-                    addCell(row, p2[i], "name", 1);
-                    addCell(row, p2[i], "loc", 1);
-                }
-            }
-            if (dayIndex === 5 && current < endLimit) {
-                const breakRow = tbody.insertRow();
-                breakRow.className = "page-break";
-            }
-            current.setDate(current.getDate() + 1);
+            } catch (e) { alert("تأكد من وجود ملف pharmaciesss.json"); }
         }
-    } catch (e) { alert("تأكد من وجود ملف pharmaciesss.json"); }
-}
 
         function addCell(row, phar, type, span) {
             const cell = row.insertCell();
